@@ -61,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
         final EditText totalCost = findViewById(R.id.totalCost);
         totalCost.setFocusable(false);
         totalCost.setText(String.format("%s%s",
-                Currency.getInstance(Locale.getDefault()).getSymbol(),
+                Currency.getInstance(getCurrentLocale()).getSymbol(),
                 adapter.getTotalCost().toString()));
 
         adapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
@@ -71,28 +71,20 @@ public class MainActivity extends AppCompatActivity {
                 super.onItemRangeChanged(posStart, itemCount);
                 Log.d(TAG, "Total cost is now " + adapter.getTotalCost().toString());
                 totalCost.setText(String.format("%s%s",
-                        Currency.getInstance(Locale.getDefault()).getSymbol(),
+                        Currency.getInstance(getCurrentLocale()).getSymbol(),
                         adapter.getTotalCost().toString()));
             }
         });
 
     }
 
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        // Inflate the menu; this adds items to the action bar if it is present.
-//        //getMenuInflater().inflate(R.menu.menu_main, menu);
-//        return true;
-//    }
-
-//    @Override
-//    public boolean onOptionsItemSelected(MenuItem item) {
-//        int id = item.getItemId();
-//        //noinspection SimplifiableIfStatement
-//        if (id == R.id.action_settings) {
-//            return true;
-//        }
-//
-//        return super.onOptionsItemSelected(item);
-//    }
+    /**
+     * Get the current locale for the phone.
+     * The use of the /locale/ field is deprecated, however, as phones with and SDK version less than
+     * 24, we still have to use it.
+     * @return Current locale
+     */
+    private Locale getCurrentLocale() {
+        return getResources().getConfiguration().locale;
+    }
 }
