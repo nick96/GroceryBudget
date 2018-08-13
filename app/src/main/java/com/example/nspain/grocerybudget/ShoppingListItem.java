@@ -1,10 +1,11 @@
 package com.example.nspain.grocerybudget;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-class ShoppingListItem {
+class ShoppingListItem implements Serializable {
     private boolean isBought;
     private String name;
     private BigDecimal cost;

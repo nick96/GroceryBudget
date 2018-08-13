@@ -15,7 +15,13 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.math.BigDecimal;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Currency;
 import java.util.Locale;
@@ -26,6 +32,7 @@ public class MainActivity extends AppCompatActivity {
     private ShoppingListItemAdapter adapter;
     private RecyclerView.LayoutManager layoutManager;
     private BottomSheetBehavior bottomSheetBehavior;
+    private String dataFileName = "shoppingListItems";
 
     /**
      * Tag for debugging purposes
@@ -41,7 +48,20 @@ public class MainActivity extends AppCompatActivity {
         recyclerView = findViewById(R.id.shoppingList);
         layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
-        adapter = new ShoppingListItemAdapter();
+
+        File dataFile = new File(getApplicationContext().getFilesDir(), dataFileName);
+
+        // Try to get shopping list data from file, it this fails then we just initialise the adapter
+        // with not data
+        try (ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(dataFileName))) {
+            adapter = new ShoppingListItemAdapter((ArrayList<ShoppingListItem>) objectInputStream.readObject(), dataFile);
+        } catch (IOException e) {
+            adapter = new ShoppingListItemAdapter(dataFile);
+        } catch (ClassNotFoundException e) {
+            // There's a bigger problem going on so just fail
+            e.printStackTrace();
+            return;
+        }
 
         recyclerView.setAdapter(adapter);
 

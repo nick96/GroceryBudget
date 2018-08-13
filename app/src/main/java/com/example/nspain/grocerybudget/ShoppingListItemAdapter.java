@@ -1,5 +1,6 @@
 package com.example.nspain.grocerybudget;
 
+import android.app.Application;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
@@ -16,6 +17,11 @@ import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -26,13 +32,15 @@ class ShoppingListItemAdapter extends RecyclerView.Adapter<ShoppingListItemAdapt
     private static final String TAG = "GB/ShoppingListItemAdapter";
     public ArrayList<ShoppingListItem> shoppingList;
     private boolean onBind;
+    private final File dataFile;
 
-    public ShoppingListItemAdapter() {
-        this(new ArrayList<ShoppingListItem>());
+    public ShoppingListItemAdapter(File dataFile) {
+        this(new ArrayList<ShoppingListItem>(), dataFile);
     }
 
-    public ShoppingListItemAdapter(ArrayList<ShoppingListItem> items) {
+    public ShoppingListItemAdapter(ArrayList<ShoppingListItem> items, File dataFile) {
         shoppingList = items;
+        this.dataFile = dataFile;
     }
 
     public BigDecimal getTotalCost() {
@@ -65,6 +73,7 @@ class ShoppingListItemAdapter extends RecyclerView.Adapter<ShoppingListItemAdapt
                     shoppingList.get(pos).setIsBought(b);
                     if (!onBind) {
                         notifyItemChanged(pos);
+                        saveData();
                     }
                 }
             });
@@ -87,6 +96,7 @@ class ShoppingListItemAdapter extends RecyclerView.Adapter<ShoppingListItemAdapt
                 public boolean onEditorAction(TextView textView, int actionId, KeyEvent keyEvent) {
                     if (isUserFinishedTyping(actionId, keyEvent)) {
                         notifyItemChanged(getAdapterPosition());
+                        saveData();
                         return true;
                     } else {
                         return false;
@@ -116,6 +126,7 @@ class ShoppingListItemAdapter extends RecyclerView.Adapter<ShoppingListItemAdapt
                 public boolean onEditorAction(TextView textView, int actionId, KeyEvent keyEvent) {
                     if (isUserFinishedTyping(actionId, keyEvent)) {
                         notifyItemChanged(getAdapterPosition());
+                        saveData();
                         return true;
                     } else {
                         return false;
@@ -170,9 +181,19 @@ class ShoppingListItemAdapter extends RecyclerView.Adapter<ShoppingListItemAdapt
     public void addItem(ShoppingListItem item) {
         shoppingList.add(item);
         notifyItemInserted(shoppingList.size() - 1);
+        saveData();
     }
 
     public ArrayList<ShoppingListItem> getShoppingList() {
         return shoppingList;
+    }
+
+    private void saveData() {
+        try (ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(dataFile))) {
+            outputStream.writeObject(shoppingList);
+            Log.d(TAG, "Data has been saved!");
+        } catch (IOException e) {
+            Log.e(TAG, "Could not save data", e);
+        }
     }
 }
