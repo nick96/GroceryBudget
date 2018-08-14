@@ -6,28 +6,38 @@
     android:layout_height="wrap_content"
     android:paddingTop="10dp"
     android:paddingBottom="10dp"
+    android:weightSum="2"
     >
 
     <CheckBox
         android:id="@+id/isBought"
-        android:layout_width="fill_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_weight="1" />
+        />
 
     <EditText
         android:id="@+id/name"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_weight="1"
-        android:ems="10"
         android:inputType="textPersonName"
-        android:text="@string/shopping_list_item_name" />
+        android:text="@string/shopping_list_item_name"
+        android:layout_weight="1"
+        />
 
     <EditText
         android:id="@+id/cost"
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:inputType="textCapCharacters|numberDecimal"
         android:layout_weight="1"
-        android:ems="10"
-        android:inputType="textCapCharacters|numberDecimal" />
+        />
+
+    <ImageButton
+        android:id="@+id/deleteItemBtn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:backgroundTint="@android:color/transparent"
+        android:src="@drawable/ic_baseline_delete_24px"
+        android:text="Button" />
+
 </LinearLayout>

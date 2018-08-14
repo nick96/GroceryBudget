@@ -1,5 +1,6 @@
 package com.example.nspain.grocerybudget;
 
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.FloatingActionButton;
@@ -14,6 +15,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -44,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+
         // Setup the recycler view, this is where the shopping list items will show
         recyclerView = findViewById(R.id.shoppingList);
         layoutManager = new LinearLayoutManager(this);
@@ -51,16 +54,29 @@ public class MainActivity extends AppCompatActivity {
 
         File dataFile = new File(getApplicationContext().getFilesDir(), dataFileName);
 
-        // Try to get shopping list data from file, it this fails then we just initialise the adapter
-        // with not data
-        try (ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(dataFileName))) {
-            adapter = new ShoppingListItemAdapter((ArrayList<ShoppingListItem>) objectInputStream.readObject(), dataFile);
-        } catch (IOException e) {
-            adapter = new ShoppingListItemAdapter(dataFile);
-        } catch (ClassNotFoundException e) {
-            // There's a bigger problem going on so just fail
-            e.printStackTrace();
-            return;
+        ArrayList<ShoppingListItem> data;
+        if (savedInstanceState != null) {
+            Log.d(TAG, "Saved instance state is not null, getting the data");
+            data = (ArrayList<ShoppingListItem>) savedInstanceState.get("shoppingList");
+            adapter = new ShoppingListItemAdapter(data, dataFile, getCurrentLocale());
+        } else {
+            Log.d(TAG, "No saved instance state, reading from stored file");
+            // Try to get shopping list data from file, it this fails then we just initialise the adapter
+            // with not data
+            try (ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(dataFileName))) {
+                data = (ArrayList<ShoppingListItem>) objectInputStream.readObject();
+                adapter = new ShoppingListItemAdapter(
+                        data,
+                        dataFile,
+                        getCurrentLocale());
+            } catch (IOException e) {
+                Log.d(TAG, "No data file found, not using any data to initialise app");
+                adapter = new ShoppingListItemAdapter(dataFile, getCurrentLocale());
+            } catch (ClassNotFoundException e) {
+                // There's a bigger problem going on so just fail
+                e.printStackTrace();
+                return;
+            }
         }
 
         recyclerView.setAdapter(adapter);
@@ -98,13 +114,22 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    @Override
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        super.onSaveInstanceState(savedInstanceState);
+        Log.d(TAG, "Saving instance state, " + adapter.getShoppingList().toString());
+        savedInstanceState.putSerializable("shoppingList", adapter.getShoppingList());
+    }
+
     /**
      * Get the current locale for the phone.
      * The use of the /locale/ field is deprecated, however, as phones with and SDK version less than
      * 24, we still have to use it.
+     *
      * @return Current locale
      */
     private Locale getCurrentLocale() {
         return getResources().getConfiguration().locale;
     }
+
 }
