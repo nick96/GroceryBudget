@@ -1,11 +1,7 @@
 package com.example.nspain.grocerybudget;
 
-import android.app.Activity;
-import android.app.Application;
 import android.content.Context;
 import android.support.annotation.NonNull;
-import android.support.design.button.MaterialButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -21,16 +17,13 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
-import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Currency;
 import java.util.Locale;
 
 class ShoppingListItemAdapter extends RecyclerView.Adapter<ShoppingListItemAdapter.ViewHolder> {
@@ -70,8 +63,8 @@ class ShoppingListItemAdapter extends RecyclerView.Adapter<ShoppingListItemAdapt
 
     public ShoppingListItemAdapter(String dataFileName, Locale locale) {
         this(new ShoppingList(
-                new ArrayList<>(Collections.singletonList(
-                        new ShoppingListItem(false, "", new BigDecimal(0))))),
+                        new ArrayList<>(Collections.singletonList(
+                                new ShoppingListItem(false, "", new BigDecimal(0))))),
                 dataFileName, locale);
     }
 
@@ -109,16 +102,21 @@ class ShoppingListItemAdapter extends RecyclerView.Adapter<ShoppingListItemAdapt
                 }
             });
 
-            name.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            name.addTextChangedListener(new TextWatcher() {
                 @Override
-                public boolean onEditorAction(TextView textView, int actionId, KeyEvent keyEvent) {
-                    if (isUserFinishedTyping(actionId, keyEvent)) {
-                        notifyItemChanged(getAdapterPosition());
-                        saveData();
-                        return true;
-                    } else {
-                        return false;
-                    }
+                public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+                }
+
+                @Override
+                public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                    ShoppingListItem item = shoppingList.getItem(getAdapterPosition());
+                    item.setName(charSequence.toString());
+                    saveData();
+                }
+
+                @Override
+                public void afterTextChanged(Editable editable) {
                 }
             });
 
@@ -129,49 +127,42 @@ class ShoppingListItemAdapter extends RecyclerView.Adapter<ShoppingListItemAdapt
                         final int pos = getAdapterPosition();
                         Log.d(TAG, "cost EditText has lost focus, will typeset contents");
                         TextView textView = (TextView) view;
-                        if (!textView.getText().toString().isEmpty()) {
-                            shoppingList.updateCost(pos, textView.getText());
-                            ShoppingListItem item = shoppingList.getItem(pos);
-                            if (item != null) {
-                                String fmtText = currencyFmt.format(item.getCost());
-                                textView.setText(fmtText);
-                            }
-
-                            if (!itemDeleted) {
-                                notifyItemChanged(pos);
-                                itemDeleted = false;
-                            }
-                            saveData();
+                        if (!textView.getText().toString().isEmpty() && shoppingList.getItem(pos) != null) {
+                            String costText = currencyFmt.format(shoppingList.getItem(pos).getCost());
+                            textView.setText(costText);
                         }
-
-
                     }
                 }
             });
 
+            cost.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+                }
+
+                @Override
+                public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                    shoppingList.updateCost(getAdapterPosition(), charSequence);
+                    saveData();
+                }
+
+                @Override
+                public void afterTextChanged(Editable editable) {
+                }
+            });
 
             cost.setOnEditorActionListener(new TextView.OnEditorActionListener() {
                 @Override
                 public boolean onEditorAction(TextView textView, int actionId, KeyEvent keyEvent) {
-                    // If the user has finished typing then we will update the shopping list
-                    // accordingly and typeset the cost they just typed in nicely.
+                    Log.d(TAG,"EditorAction: " + actionId + "; " + keyEvent);
                     if (isUserFinishedTyping(actionId, keyEvent)) {
-                        if (!textView.getText().toString().isEmpty()) {
-                            final int pos = getAdapterPosition();
-                            Log.d(TAG, "Cost is currently typeset as : " + textView.getText());
-                            shoppingList.updateCost(pos, textView.getText());
-                            String fmtText = currencyFmt.format(shoppingList.getItem(pos).getCost());
-                            textView.setText(fmtText);
-                            Log.d(TAG, "Cost is now typeset as: " + textView.getText());
-                        }
                         notifyItemChanged(getAdapterPosition());
-                        saveData();
-                        return true;
-                    } else {
-                        return false;
                     }
+                    return true;
                 }
             });
+
 
             deleteItemBtn.setOnClickListener(new View.OnClickListener() {
                 @Override

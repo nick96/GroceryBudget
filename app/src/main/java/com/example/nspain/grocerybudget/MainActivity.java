@@ -1,11 +1,7 @@
 package com.example.nspain.grocerybudget;
 
 import android.content.Context;
-import android.content.res.Configuration;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.LocaleList;
-import android.support.annotation.RequiresApi;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
@@ -16,16 +12,11 @@ import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.math.BigDecimal;
 import java.text.NumberFormat;
-import java.util.ArrayList;
-import java.util.Currency;
 import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
@@ -34,6 +25,7 @@ public class MainActivity extends AppCompatActivity {
     private ShoppingListItemAdapter adapter;
     private RecyclerView.LayoutManager layoutManager;
     private BottomSheetBehavior bottomSheetBehavior;
+    private EditText totalCost;
 
     /**
      * Tag for debugging purposes
@@ -75,7 +67,7 @@ public class MainActivity extends AppCompatActivity {
         bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet);
         bottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
 
-        final EditText totalCost = findViewById(R.id.totalCost);
+        totalCost = findViewById(R.id.totalCost);
         totalCost.setFocusable(false);
         ShoppingList shoppingList = adapter.getShoppingList();
         totalCost.setText(getFmtTotalCost());

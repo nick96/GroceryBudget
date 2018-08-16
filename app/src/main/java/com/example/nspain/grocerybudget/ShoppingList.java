@@ -7,8 +7,6 @@ import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 
 public class ShoppingList implements Serializable {
     private static final String TAG = "GB/ShoppingList";
@@ -19,6 +17,7 @@ public class ShoppingList implements Serializable {
     }
 
     public ShoppingList(ArrayList<ShoppingListItem> items){
+        super();
         this.items = items;
     }
 
@@ -79,4 +78,5 @@ public class ShoppingList implements Serializable {
     public void addItem(ShoppingListItem item) {
         items.add(item);
     }
+
 }
