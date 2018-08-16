@@ -66,6 +66,7 @@ class ShoppingListItemAdapter extends RecyclerView.Adapter<ShoppingListItemAdapt
      * are created.
      */
     private boolean bindNewItem;
+    private boolean itemDeleted;
 
     public ShoppingListItemAdapter(String dataFileName, Locale locale) {
         this(new ShoppingList(
@@ -79,6 +80,7 @@ class ShoppingListItemAdapter extends RecyclerView.Adapter<ShoppingListItemAdapt
         this.dataFileName = dataFileName;
         currencyFmt = NumberFormat.getCurrencyInstance(locale);
         bindNewItem = false;
+        itemDeleted = false;
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
@@ -116,6 +118,33 @@ class ShoppingListItemAdapter extends RecyclerView.Adapter<ShoppingListItemAdapt
                         return true;
                     } else {
                         return false;
+                    }
+                }
+            });
+
+            cost.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+                @Override
+                public void onFocusChange(View view, boolean hasFocus) {
+                    if (!hasFocus) {
+                        final int pos = getAdapterPosition();
+                        Log.d(TAG, "cost EditText has lost focus, will typeset contents");
+                        TextView textView = (TextView) view;
+                        if (!textView.getText().toString().isEmpty()) {
+                            shoppingList.updateCost(pos, textView.getText());
+                            ShoppingListItem item = shoppingList.getItem(pos);
+                            if (item != null) {
+                                String fmtText = currencyFmt.format(item.getCost());
+                                textView.setText(fmtText);
+                            }
+
+                            if (!itemDeleted) {
+                                notifyItemChanged(pos);
+                                itemDeleted = false;
+                            }
+                            saveData();
+                        }
+
+
                     }
                 }
             });
@@ -227,7 +256,8 @@ class ShoppingListItemAdapter extends RecyclerView.Adapter<ShoppingListItemAdapt
     public void removeItem(int pos) {
         Log.d(TAG, "Removing item at " + pos);
         shoppingList.remove(pos);
-        notifyItemRemoved(pos);
+        notifyDataSetChanged();
         saveData();
+        itemDeleted = true;
     }
 }

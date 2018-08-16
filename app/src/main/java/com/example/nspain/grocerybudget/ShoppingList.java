@@ -32,7 +32,10 @@ public class ShoppingList implements Serializable {
         return total;    }
 
     public ShoppingListItem getItem(int pos) {
-        return items.get(pos);
+        if (pos >= 0 && pos < items.size()) {
+            return items.get(pos);
+        }
+        return null;
     }
 
     public void remove(int pos) {
@@ -42,9 +45,11 @@ public class ShoppingList implements Serializable {
     public void updateCost(int pos, CharSequence text) {
         BigDecimal newCost = costTextToCost(text);
         if (newCost != null) {
-            ShoppingListItem item = items.get(pos);
-            item.setCost(newCost);
-            items.set(pos, item);
+            ShoppingListItem item = getItem(pos);
+            if (item != null) {
+                item.setCost(newCost);
+                items.set(pos, item);
+            }
         }
     }
 
@@ -59,7 +64,7 @@ public class ShoppingList implements Serializable {
         try {
             // This could be a source of bugs as the currency parser returns a double which is not
             // really sufficient for representing currency.
-            cost = new BigDecimal((Double)NumberFormat.getCurrencyInstance().parse(cleaned));
+            cost = new BigDecimal(NumberFormat.getCurrencyInstance().parse(cleaned).toString());
         } catch (ParseException e) {
             Log.d(TAG, "Problem parsing " + cleaned, e);
         }
