@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">GroceryBudget</string>
     <string name="action_settings">Settings</string>
-    <string name="shopping_list_item_name">item</string>
+    <string name="shopping_list_item_name">item description</string>
     <string name="totalCost">total cost</string>
+    <string name="item_cost">Item cost</string>
+    <string name="item_bought">Is the item bought?</string>
 </resources>

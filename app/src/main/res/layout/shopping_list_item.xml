@@ -6,31 +6,32 @@
     android:layout_height="wrap_content"
     android:paddingTop="10dp"
     android:paddingBottom="10dp"
+    android:paddingLeft="10dp"
     android:weightSum="2"
     >
+
+    <EditText
+        android:id="@+id/name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:contentDescription="@string/shopping_list_item_name"
+        android:hint="@string/shopping_list_item_name"
+        android:inputType="textPersonName"
+        android:text="@string/shopping_list_item_name" />
+
+    <EditText
+        android:id="@+id/cost"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:hint="@string/item_cost"
+        android:inputType="textCapCharacters|numberDecimal" />
 
     <CheckBox
         android:id="@+id/isBought"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        />
-
-    <EditText
-        android:id="@+id/name"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:inputType="textPersonName"
-        android:text="@string/shopping_list_item_name"
-        android:layout_weight="1"
-        />
-
-    <EditText
-        android:id="@+id/cost"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:inputType="textCapCharacters|numberDecimal"
-        android:layout_weight="1"
-        />
+        android:layout_height="wrap_content" />
 
     <ImageButton
         android:id="@+id/deleteItemBtn"

@@ -35,8 +35,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_margin="@dimen/fab_margin"
-        android:background="?attr/colorButtonNormal"
-        app:backgroundTint="@android:color/darker_gray"
+        android:background="@color/colorAccent"
         app:srcCompat="@drawable/ic_add_white_24dp" />
 
 
@@ -44,7 +43,7 @@
         android:id="@+id/bottomsheet"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="?attr/colorButtonNormal"
+        android:background="@color/colorPrimary"
         android:clipToPadding="true"
         app:layout_behavior="android.support.design.widget.BottomSheetBehavior">
 

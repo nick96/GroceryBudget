@@ -48,4 +48,9 @@ class ShoppingListItem implements Serializable {
     public void setIsBought(boolean isBought) {
         this.isBought = isBought;
     }
+
+    @Override
+    public String toString() {
+        return String.format("name: %s; cost: %s; isBought: %s", name, cost, isBought);
+    }
 }

@@ -1,5 +1,7 @@
 package com.example.nspain.grocerybudget;
 
+import android.app.Activity;
+import android.app.Application;
 import android.content.Context;
 import android.support.annotation.NonNull;
 import android.support.design.button.MaterialButton;
@@ -26,6 +28,8 @@ import java.io.ObjectOutputStream;
 import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Currency;
 import java.util.Locale;
 
@@ -40,7 +44,7 @@ class ShoppingListItemAdapter extends RecyclerView.Adapter<ShoppingListItemAdapt
      * Store the shopping list data so that we can save it and have continuity with RecyclerView
      * recycling views.
      */
-    public ArrayList<ShoppingListItem> shoppingList;
+    private ShoppingList shoppingList;
 
     /**
      * Prevent mutually recursive calls to update listeners when binding views
@@ -50,31 +54,31 @@ class ShoppingListItemAdapter extends RecyclerView.Adapter<ShoppingListItemAdapt
     /**
      * File to save the shopping list data to
      */
-    private final File dataFile;
+    private final String dataFileName;
 
-    private final Locale locale;
-
+    /**
+     * Format currency according to the locale.
+     */
     private final NumberFormat currencyFmt;
 
-    public ShoppingListItemAdapter(File dataFile, Locale locale) {
-        this(new ArrayList<ShoppingListItem>(), dataFile, locale);
+    /**
+     * Whether or not a new item is being bound. This allows us to change the behaviour when new items
+     * are created.
+     */
+    private boolean bindNewItem;
+
+    public ShoppingListItemAdapter(String dataFileName, Locale locale) {
+        this(new ShoppingList(
+                new ArrayList<>(Collections.singletonList(
+                        new ShoppingListItem(false, "", new BigDecimal(0))))),
+                dataFileName, locale);
     }
 
-    public ShoppingListItemAdapter(ArrayList<ShoppingListItem> items, File dataFile, Locale locale) {
-        shoppingList = items;
-        this.dataFile = dataFile;
-        this.locale = locale;
+    public ShoppingListItemAdapter(ShoppingList list, String dataFileName, Locale locale) {
+        shoppingList = list;
+        this.dataFileName = dataFileName;
         currencyFmt = NumberFormat.getCurrencyInstance(locale);
-    }
-
-    public BigDecimal getTotalCost() {
-        BigDecimal total = new BigDecimal(0);
-        for (ShoppingListItem item : shoppingList) {
-            if (item.isBought()) {
-                total = total.add(item.getCost());
-            }
-        }
-        return total;
+        bindNewItem = false;
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
@@ -94,7 +98,8 @@ class ShoppingListItemAdapter extends RecyclerView.Adapter<ShoppingListItemAdapt
                 @Override
                 public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                     final int pos = getAdapterPosition();
-                    shoppingList.get(pos).setIsBought(b);
+                    Log.d(TAG, "Item: " + shoppingList.getItem(pos));
+                    shoppingList.getItem(pos).setIsBought(b);
                     if (!onBind) {
                         notifyItemChanged(pos);
                         saveData();
@@ -102,20 +107,20 @@ class ShoppingListItemAdapter extends RecyclerView.Adapter<ShoppingListItemAdapt
                 }
             });
 
-            name.addTextChangedListener(new TextWatcher() {
-                @Override
-                public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                    shoppingList.get(getAdapterPosition()).setName(charSequence.toString());
-                }
-
-                @Override
-                public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                }
-
-                @Override
-                public void afterTextChanged(Editable editable) {
-                }
-            });
+//            name.addTextChangedListener(new TextWatcher() {
+//                @Override
+//                public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+//                    shoppingList.getItem(getAdapterPosition()).setName(charSequence.toString());
+//                }
+//
+//                @Override
+//                public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+//                }
+//
+//                @Override
+//                public void afterTextChanged(Editable editable) {
+//                }
+//            });
 
             name.setOnEditorActionListener(new TextView.OnEditorActionListener() {
                 @Override
@@ -130,54 +135,51 @@ class ShoppingListItemAdapter extends RecyclerView.Adapter<ShoppingListItemAdapt
                 }
             });
 
-            cost.addTextChangedListener(new TextWatcher() {
-                @Override
-                public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                    Log.d(TAG, "Cost TextEdit has been changed");
-                    String input = charSequence.toString();
-
-                    // Fix up formatting of text input so that the BigDecimal parser doesn't fail
-                    if (input.isEmpty()) {
-                        input = "0";
-                    } else if (input.charAt(0) == '.') {
-                        // We'll allow inputs like ".5" to be short of "0.5"
-                        input = "0" + input;
-                    } else if (input.charAt(0) == Currency.getInstance(locale).getSymbol().charAt(0)) {
-                        input = input.substring(1, input.length());
-                    }
-
-                    try {
-                        Log.d(TAG, "Trying to parse input into a BigDecimal");
-                        shoppingList.get(getAdapterPosition()).setCost(new BigDecimal(input));
-                    } catch (Exception e){
-                        // When we fail to parse the string to a BigDecimal, notify the user.
-                        // Principle of least surprise
-                        e.printStackTrace();
-                        Log.d(TAG, "Cost formatting failed on input " + charSequence, e);
-                        Snackbar.make(v, "I can't understand what you've just written", Snackbar.LENGTH_LONG);
-                    }
-                }
-
-                @Override
-                public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                }
-
-                @Override
-                public void afterTextChanged(Editable editable) {
-                }
-            });
+//            cost.addTextChangedListener(new TextWatcher() {
+//                @Override
+//                public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+//                    Log.d(TAG, "Cost TextEdit has been changed");
+//                    String input = charSequence.toString();
+//
+//                    // Fix up formatting of text input so that the BigDecimal parser doesn't fail
+//                    input = prepCostText(input);
+//
+//                    try {
+//                        Log.d(TAG, "Trying to parse input, " + input + ", into a BigDecimal");
+//                        shoppingList.getItem(getAdapterPosition()).setCost(new BigDecimal(input));
+//                    } catch (NumberFormatException e) {
+//                        // When we fail to parse the string to a BigDecimal, notify the user.
+//                        // Principle of least surprise
+//                        e.printStackTrace();
+//                        Log.d(TAG, "Cost formatting failed on input " + input, e);
+////                        Snackbar.make(itemView, "I can't understand what you've just written", Snackbar.LENGTH_LONG);
+//                        Log.d(TAG, "Cannot understand input " + input);
+//                    }
+//                }
+//
+//                @Override
+//                public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+//                }
+//
+//                @Override
+//                public void afterTextChanged(Editable editable) {
+//                }
+//            });
 
             cost.setOnEditorActionListener(new TextView.OnEditorActionListener() {
                 @Override
                 public boolean onEditorAction(TextView textView, int actionId, KeyEvent keyEvent) {
+                    // If the user has finished typing then we will update the shopping list
+                    // accordingly and typeset the cost they just typed in nicely.
                     if (isUserFinishedTyping(actionId, keyEvent)) {
                         if (!textView.getText().toString().isEmpty()) {
+                            final int pos = getAdapterPosition();
                             Log.d(TAG, "Cost is currently typeset as : " + textView.getText());
-                            String fmtText = currencyFmt.format(Double.parseDouble(textView.getText().toString()));
-                            Log.d(TAG, "User has finished typing, pretty printing cost: " + fmtText);
+                            shoppingList.updateCost(pos, textView.getText());
+                            String fmtText = currencyFmt.format(shoppingList.getItem(pos).getCost());
                             textView.setText(fmtText);
+                            Log.d(TAG, "Cost is now typeset as: " + textView.getText());
                         }
-
                         notifyItemChanged(getAdapterPosition());
                         saveData();
                         return true;
@@ -186,7 +188,7 @@ class ShoppingListItemAdapter extends RecyclerView.Adapter<ShoppingListItemAdapt
                     }
                 }
             });
-            
+
             deleteItemBtn.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
@@ -226,38 +228,49 @@ class ShoppingListItemAdapter extends RecyclerView.Adapter<ShoppingListItemAdapt
         Log.d(TAG, "Binding view holder");
 
         onBind = true;
-        ShoppingListItem item = shoppingList.get(pos);
+        ShoppingListItem item = shoppingList.getItem(pos);
+        Log.d(TAG, "Binding item: " + item);
         viewHolder.isBought.setChecked(item.isBought());
         viewHolder.name.setText(item.getName());
-        viewHolder.cost.setText(currencyFmt.format(item.getCost()));
+        if (item.getCost() != null) {
+            viewHolder.cost.setText(currencyFmt.format(item.getCost()));
+        }
+
+        if (bindNewItem) {
+            viewHolder.name.requestFocus();
+            bindNewItem = false;
+        }
         onBind = false;
     }
 
     @Override
     public int getItemCount() {
-        return shoppingList.size();
+        return shoppingList.getItemCount();
     }
 
     public void addItem(ShoppingListItem item) {
-        shoppingList.add(item);
-        notifyItemInserted(shoppingList.size() - 1);
+        shoppingList.addItem(item);
+        Log.d(TAG, "Adding item " + item);
+        notifyItemInserted(shoppingList.getItemCount() - 1);
         saveData();
+        bindNewItem = true;
     }
 
-    public ArrayList<ShoppingListItem> getShoppingList() {
+    public ShoppingList getShoppingList() {
         return shoppingList;
     }
 
     public void saveData() {
-        try (ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(dataFile))) {
+        try (ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(dataFileName))) {
             outputStream.writeObject(shoppingList);
             Log.d(TAG, "Data has been saved!");
         } catch (IOException e) {
             Log.e(TAG, "Could not save data", e);
         }
     }
-    
+
     public void removeItem(int pos) {
+        Log.d(TAG, "Removing item at " + pos);
         shoppingList.remove(pos);
         notifyItemRemoved(pos);
         saveData();
