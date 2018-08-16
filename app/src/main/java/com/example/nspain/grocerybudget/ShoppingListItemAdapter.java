@@ -107,21 +107,6 @@ class ShoppingListItemAdapter extends RecyclerView.Adapter<ShoppingListItemAdapt
                 }
             });
 
-//            name.addTextChangedListener(new TextWatcher() {
-//                @Override
-//                public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-//                    shoppingList.getItem(getAdapterPosition()).setName(charSequence.toString());
-//                }
-//
-//                @Override
-//                public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-//                }
-//
-//                @Override
-//                public void afterTextChanged(Editable editable) {
-//                }
-//            });
-
             name.setOnEditorActionListener(new TextView.OnEditorActionListener() {
                 @Override
                 public boolean onEditorAction(TextView textView, int actionId, KeyEvent keyEvent) {
@@ -135,36 +120,6 @@ class ShoppingListItemAdapter extends RecyclerView.Adapter<ShoppingListItemAdapt
                 }
             });
 
-//            cost.addTextChangedListener(new TextWatcher() {
-//                @Override
-//                public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-//                    Log.d(TAG, "Cost TextEdit has been changed");
-//                    String input = charSequence.toString();
-//
-//                    // Fix up formatting of text input so that the BigDecimal parser doesn't fail
-//                    input = prepCostText(input);
-//
-//                    try {
-//                        Log.d(TAG, "Trying to parse input, " + input + ", into a BigDecimal");
-//                        shoppingList.getItem(getAdapterPosition()).setCost(new BigDecimal(input));
-//                    } catch (NumberFormatException e) {
-//                        // When we fail to parse the string to a BigDecimal, notify the user.
-//                        // Principle of least surprise
-//                        e.printStackTrace();
-//                        Log.d(TAG, "Cost formatting failed on input " + input, e);
-////                        Snackbar.make(itemView, "I can't understand what you've just written", Snackbar.LENGTH_LONG);
-//                        Log.d(TAG, "Cannot understand input " + input);
-//                    }
-//                }
-//
-//                @Override
-//                public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-//                }
-//
-//                @Override
-//                public void afterTextChanged(Editable editable) {
-//                }
-//            });
 
             cost.setOnEditorActionListener(new TextView.OnEditorActionListener() {
                 @Override
