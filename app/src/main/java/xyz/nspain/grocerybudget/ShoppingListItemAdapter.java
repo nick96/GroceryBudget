@@ -75,6 +75,11 @@ class ShoppingListItemAdapter extends RecyclerView.Adapter<ShoppingListItemAdapt
         bindNewItem = false;
     }
 
+    public void setShoppingList(ShoppingList shoppingList) {
+        this.shoppingList = shoppingList;
+        notifyDataSetChanged();
+    }
+
     public class ViewHolder extends RecyclerView.ViewHolder {
         public CheckBox isBought;
         public EditText name;
@@ -235,12 +240,12 @@ class ShoppingListItemAdapter extends RecyclerView.Adapter<ShoppingListItemAdapt
     }
 
     public void saveData() {
-        try (ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(dataFileName))) {
-            outputStream.writeObject(shoppingList);
-            Log.d(TAG, "Data has been saved!");
-        } catch (IOException e) {
-            Log.e(TAG, "Could not save data", e);
-        }
+//        try (ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream(dataFileName))) {
+//            outputStream.writeObject(shoppingList);
+//            Log.d(TAG, "Data has been saved!");
+//        } catch (IOException e) {
+//            Log.e(TAG, "Could not save data", e);
+//        }
     }
 
     public void removeItem(int pos) {
