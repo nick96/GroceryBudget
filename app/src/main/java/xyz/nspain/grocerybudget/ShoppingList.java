@@ -14,7 +14,7 @@ public class ShoppingList implements Serializable {
     private ArrayList<ShoppingListItem> items;
     private Locale locale;
 
-    public ShoppingList() {
+    public ShoppingList(ArrayList<ShoppingListItem> shoppingListItems) {
         this(new ArrayList<ShoppingListItem>(), null);
     }
 

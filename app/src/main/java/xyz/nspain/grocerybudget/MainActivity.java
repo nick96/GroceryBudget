@@ -4,11 +4,14 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.FloatingActionButton;
+import android.support.v4.view.GravityCompat;
+import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 
@@ -26,19 +29,21 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView.LayoutManager layoutManager;
     private BottomSheetBehavior bottomSheetBehavior;
     private EditText totalCost;
+    private DrawerLayout navigationDrawer;
 
     /**
      * Tag for debugging purposes
      */
     public final static String TAG = "GB/MainActivity";
+    private ShoppingList shoppingList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         final String dataFileName = getApplicationContext().getFilesDir() + "shoppingListItems";
 
         setContentView(R.layout.activity_main);
-
 
         // Setup the recycler view, this is where the shopping list items will show
         recyclerView = findViewById(R.id.shoppingList);
@@ -133,6 +138,16 @@ public class MainActivity extends AppCompatActivity {
         super.onSaveInstanceState(savedInstanceState);
         Log.d(TAG, "Saving instance state, " + adapter.getShoppingList().toString());
         savedInstanceState.putSerializable("shoppingList", adapter.getShoppingList());
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case android.R.id.home:
+                navigationDrawer.openDrawer(GravityCompat.START);
+                return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     /**
