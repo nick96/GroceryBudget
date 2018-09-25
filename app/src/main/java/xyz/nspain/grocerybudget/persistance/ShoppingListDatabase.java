@@ -15,7 +15,7 @@ import java.util.List;
 @android.arch.persistence.room.Database(entities = {
         Item.class,
         ShoppingList.class
-}, version = 8)
+}, version = 9)
 @TypeConverters({Converters.class})
 public abstract class ShoppingListDatabase extends RoomDatabase {
     private static final String TAG = ShoppingListDatabase.class.getCanonicalName();

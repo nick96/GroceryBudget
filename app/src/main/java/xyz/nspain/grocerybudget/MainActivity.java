@@ -30,10 +30,11 @@ public class MainActivity extends AppCompatActivity {
     private ShoppingListAdapter mAdapter;
     private RecyclerView.LayoutManager mLayoutManager;
     private BottomSheetBehavior bottomSheetBehavior;
-    private EditText totalCost;
+    private EditText mTotalCostView;
     private ShoppingListViewModel mShoppingListViewModel;
     private DrawerLayout navigationDrawer;
     private Parcelable mListState;
+    private NumberFormat mCurrencyFormatter;
 
     /**
      * Tag for debugging purposes
@@ -49,10 +50,12 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
 
+        mCurrencyFormatter = NumberFormat.getCurrencyInstance(getCurrentLocale());
+
         // Setup the recycler view, this is where the shopping list items will show
         mRecyclerView = findViewById(R.id.shoppingList);
         mLayoutManager = new LinearLayoutManager(this);
-        mAdapter = new ShoppingListAdapter(this, NumberFormat.getCurrencyInstance(getCurrentLocale()));
+        mAdapter = new ShoppingListAdapter(this, mCurrencyFormatter);
 
         mRecyclerView.setLayoutManager(mLayoutManager);
         mRecyclerView.setAdapter(mAdapter);
@@ -65,10 +68,20 @@ public class MainActivity extends AppCompatActivity {
                 if (!mShoppingListViewModel.isCircularUpdate()) {
                     Log.d(TAG, "Is not circular update");
                     mAdapter.setItems(items);
-                    mShoppingListViewModel.setIsCircularUpdate(false);
+                    mShoppingListViewModel.setIsCircularUpdate(true);
                 } else {
+                    mShoppingListViewModel.setIsCircularUpdate(false);
                     Log.d(TAG, "Is circular update");
                 }
+            }
+        });
+
+        mTotalCostView = findViewById(R.id.totalCost);
+        mShoppingListViewModel.getCurrentListTotal().observe(this, new Observer<BigDecimal>() {
+            @Override
+            public void onChanged(@Nullable BigDecimal totalCost) {
+                Log.d(TAG, "Updating total cost");
+                mTotalCostView.setText(mCurrencyFormatter.format(totalCost));
             }
         });
 

@@ -6,6 +6,7 @@ import android.arch.lifecycle.LiveData;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 import xyz.nspain.grocerybudget.persistance.Item;
@@ -61,5 +62,9 @@ public class ShoppingListViewModel extends AndroidViewModel {
 
     public void setIsCircularUpdate(boolean val) {
         mIsCircularUpdate = val;
+    }
+
+    public LiveData<BigDecimal> getCurrentListTotal() {
+        return mRepository.getCurrentListTotal();
     }
 }

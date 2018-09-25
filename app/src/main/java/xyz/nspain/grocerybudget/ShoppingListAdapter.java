@@ -100,24 +100,14 @@ public class ShoppingListAdapter extends RecyclerView.Adapter<ShoppingListAdapte
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
                     if (!mOnBind) {
+                        Log.d(TAG + ":mItemCostView", "Found edit to item cost");
+                        mCursorPos = mItemCostView.getSelectionStart();
                         final int pos = getAdapterPosition();
                         Item currItem = mItems.get(pos);
-                        Number cost = null;
-                        Log.d(TAG, "String being parsed: " + s.toString());
-                        try {
-                            cost = mCurrencyFormatter.parse(s.toString());
-                        } catch (ParseException e) {
-                            Log.e(TAG, "Could not parse cost", e);
-                            return;
-                        }
-
-                        if (cost != null) {
-                            BigDecimal bigDecimalCost = new BigDecimal(cost.toString());
-                            currItem.setCost(bigDecimalCost == null ? new BigDecimal(0) : bigDecimalCost);
-                            mCursorPos = mItemCostView.getSelectionStart();
-                            AdapterNotifyMessage msg = new AdapterNotifyMessage(currItem, ChangeType.UPDATE);
-                            notifyItemChanged(pos, msg);
-                        }
+                        BigDecimal cost = parseItemCostText(s.toString());
+                        currItem.setCost(cost);
+                        AdapterNotifyMessage msg = new AdapterNotifyMessage(currItem, ChangeType.UPDATE);
+                        notifyItemChanged(pos, msg);
                     }
                 }
 
@@ -129,6 +119,7 @@ public class ShoppingListAdapter extends RecyclerView.Adapter<ShoppingListAdapte
             mItemCostView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
                 @Override
                 public void onFocusChange(View v, boolean hasFocus) {
+                    Log.d(TAG, "Focus changed on item cost");
                     if (hasFocus) {
                         mCursorLocation = CursorLocation.ITEM_COST_VIEW;
                         mCursorPos = mItemCostView.getSelectionStart();
@@ -160,6 +151,21 @@ public class ShoppingListAdapter extends RecyclerView.Adapter<ShoppingListAdapte
                 notifyItemChanged(pos, msg);
             }
         }
+    }
+
+    private BigDecimal parseItemCostText(String costText) {
+        BigDecimal cost = new BigDecimal(0);
+        try {
+            cost = new BigDecimal(mCurrencyFormatter.parse(costText).toString());
+        } catch (ParseException parserException) {
+            Log.d(TAG, "Cannot parse " + costText + " using currency formatter", parserException);
+            try {
+                cost = new BigDecimal(costText);
+            } catch (NumberFormatException numberFormatException) {
+                Log.d(TAG, "Cannot parse " + costText + " using regular BigDecimal parser", numberFormatException);
+            }
+        }
+        return cost;
     }
 
     @NonNull

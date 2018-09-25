@@ -8,6 +8,7 @@ import android.util.Log;
 
 import org.apache.commons.collections4.CollectionUtils;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -79,5 +80,9 @@ public class ShoppingListRepository {
                 Log.d(TAG, "Updated " + item);
             }
         });
+    }
+
+    public LiveData<BigDecimal> getCurrentListTotal() {
+        return mItemDao.getTotalCostForCurrentList();
     }
 }

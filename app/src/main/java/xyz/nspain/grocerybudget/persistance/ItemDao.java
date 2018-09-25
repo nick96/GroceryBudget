@@ -26,13 +26,17 @@ public abstract class ItemDao {
     @Query("SELECT * FROM shopping_list_item WHERE name LIKE :name")
     abstract List<Item> getItemByName(String name);
 
-    @Query("SELECT SUM(cost) FROM shopping_list_item WHERE list_id = :listId")
+    @Query("SELECT SUM(cost) FROM shopping_list_item WHERE list_id = :listId AND is_bought")
     abstract BigDecimal getTotalCostForList(long listId);
 
     @Query("SELECT shopping_list_item.* FROM shopping_list_item"
             + " JOIN shopping_list WHERE shopping_list_item.list_id = shopping_list.id"
             + " AND shopping_list.is_current")
     abstract LiveData<List<Item>> getItemsInCurrentList();
+
+    @Query("SELECT SUM(cost) FROM shopping_list_item WHERE is_bought AND"
+            + " list_id IN (SELECT list_id FROM shopping_list WHERE is_current)")
+    abstract LiveData<BigDecimal> getTotalCostForCurrentList();
 
     boolean isEmpty() {
         return getItems().isEmpty();
