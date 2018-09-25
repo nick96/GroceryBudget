@@ -3,22 +3,26 @@ package xyz.nspain.grocerybudget;
 import xyz.nspain.grocerybudget.persistance.Item;
 
 class AdapterNotifyMessage {
-    private Item mItem;
+    private Object mPayload;
     private ChangeType mChangeType;
 
     public enum ChangeType {
-        UPDATE,
-        DELETE,
-        INSERT
+        UPDATE_ITEM,
+        DELETE_ITEM,
+        INSERT_ITEM,
+
+        UPDATE_LIST,
+        DELETE_LIST,
+        INSERT_LIST
     }
 
-    public AdapterNotifyMessage(Item item, ChangeType changeType) {
-        mItem = item;
+    public AdapterNotifyMessage(Object item, ChangeType changeType) {
+        mPayload = item;
         mChangeType = changeType;
     }
 
-    public Item getItem() {
-        return mItem;
+    public Object getPayload() {
+        return mPayload;
     }
 
     public ChangeType getChangeType() {

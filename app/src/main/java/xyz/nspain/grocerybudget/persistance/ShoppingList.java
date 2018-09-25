@@ -8,7 +8,7 @@ import android.arch.persistence.room.PrimaryKey;
 import java.util.Locale;
 
 @Entity(tableName = "shopping_list")
-public class ShoppingList {
+public class ShoppingList implements ShoppingListDatabaseEntity {
     @ColumnInfo(name = "id")
     @PrimaryKey(autoGenerate = true)
     private long mId;

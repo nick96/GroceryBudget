@@ -71,7 +71,7 @@ public class ShoppingListAdapter extends RecyclerView.Adapter<ShoppingListAdapte
                         Item currItem = mItems.get(pos);
                         currItem.setName(s.toString());
                         mCursorPos = mItemNameView.getSelectionStart();
-                        AdapterNotifyMessage msg = new AdapterNotifyMessage(currItem, ChangeType.UPDATE);
+                        AdapterNotifyMessage msg = new AdapterNotifyMessage(currItem, ChangeType.UPDATE_ITEM);
                         notifyItemChanged(pos, msg);
                     }
                 }
@@ -106,7 +106,7 @@ public class ShoppingListAdapter extends RecyclerView.Adapter<ShoppingListAdapte
                         Item currItem = mItems.get(pos);
                         BigDecimal cost = parseItemCostText(s.toString());
                         currItem.setCost(cost);
-                        AdapterNotifyMessage msg = new AdapterNotifyMessage(currItem, ChangeType.UPDATE);
+                        AdapterNotifyMessage msg = new AdapterNotifyMessage(currItem, ChangeType.UPDATE_ITEM);
                         notifyItemChanged(pos, msg);
                     }
                 }
@@ -146,7 +146,7 @@ public class ShoppingListAdapter extends RecyclerView.Adapter<ShoppingListAdapte
             if (buttonView.getId() == mItemIsBoughtView.getId() && !mOnBind) {
                 final int pos = getAdapterPosition();
                 mItems.get(pos).setIsBought(isChecked);
-                AdapterNotifyMessage msg = new AdapterNotifyMessage(mItems.get(pos), ChangeType.UPDATE);
+                AdapterNotifyMessage msg = new AdapterNotifyMessage(mItems.get(pos), ChangeType.UPDATE_ITEM);
                 Log.d(TAG, "Changed is bought status");
                 notifyItemChanged(pos, msg);
             }
@@ -156,7 +156,12 @@ public class ShoppingListAdapter extends RecyclerView.Adapter<ShoppingListAdapte
     private BigDecimal parseItemCostText(String costText) {
         BigDecimal cost = new BigDecimal(0);
         try {
-            cost = new BigDecimal(mCurrencyFormatter.parse(costText).toString());
+            if (mCurrencyFormatter != null) {
+                cost = new BigDecimal(mCurrencyFormatter.parse(costText).toString());
+            } else {
+                cost = new BigDecimal(costText);
+            }
+
         } catch (ParseException parserException) {
             Log.d(TAG, "Cannot parse " + costText + " using currency formatter", parserException);
             try {
@@ -180,8 +185,18 @@ public class ShoppingListAdapter extends RecyclerView.Adapter<ShoppingListAdapte
         mOnBind = true;
         Log.d(TAG, "Binding view holder");
         Item currItem = mItems.get(position);
-        itemViewHolder.mItemNameView.setText(currItem.getName());
-        itemViewHolder.mItemCostView.setText(mCurrencyFormatter.format(currItem.getCost()));
+        String itemName = currItem.getName() != null ? currItem.getName() : "";
+        BigDecimal itemCost = currItem.getCost() != null ? currItem.getCost() : new BigDecimal(0);
+
+        Log.d(TAG, "Binding item: name: " + itemName + "; cost: " + itemCost);
+
+        String itemCostTxt = itemCost.toString();
+        if (mCurrencyFormatter != null) {
+            itemCostTxt = mCurrencyFormatter.format(itemCost);
+        }
+
+        itemViewHolder.mItemNameView.setText(itemName);
+        itemViewHolder.mItemCostView.setText(itemCostTxt);
         itemViewHolder.mItemIsBoughtView.setChecked(currItem.isBought());
         if (mCursorLocation != null) {
             int textLen;
@@ -221,7 +236,7 @@ public class ShoppingListAdapter extends RecyclerView.Adapter<ShoppingListAdapte
         if (mItems == null) {
             mItems = items;
         } else {
-            DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(new ShoppingListDiffCallback(mItems, items));
+            DiffUtil.DiffResult diffResult = DiffUtil.calculateDiff(new GenericDiffCallBack<>(mItems, items));
             mItems.clear();
             mItems = new ArrayList<>();
             mItems.addAll(items);
@@ -234,7 +249,7 @@ public class ShoppingListAdapter extends RecyclerView.Adapter<ShoppingListAdapte
             Item removedItem = mItems.remove(pos);
             notifyItemRemoved(pos);
             Log.d(TAG, "Removed " + removedItem + " from list");
-            AdapterNotifyMessage msg = new AdapterNotifyMessage(removedItem, ChangeType.DELETE);
+            AdapterNotifyMessage msg = new AdapterNotifyMessage(removedItem, ChangeType.DELETE_ITEM);
             Log.d(TAG, "Sending " + msg);
             notifyItemChanged(pos, msg);
         }

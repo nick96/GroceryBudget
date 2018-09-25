@@ -75,4 +75,20 @@ public class ShoppingListViewModel extends AndroidViewModel {
     public void updateCurrentList(String listName) {
         mRepository.updateCurrentList(listName);
     }
+
+    public void deleteList(ShoppingList list) {
+        mRepository.deleteList(list);
+    }
+
+    public void updateList(ShoppingList list) {
+        mRepository.updateList(list);
+    }
+
+    public LiveData<ShoppingList> getCurrentList() {
+        return mRepository.getCurrentList();
+    }
+
+    public LiveData<List<Item>> getCurrentItems() {
+        return mRepository.getCurrentListItems();
+    }
 }

@@ -1,38 +1,37 @@
 package xyz.nspain.grocerybudget;
 
-import android.support.annotation.Nullable;
 import android.support.v7.util.DiffUtil;
 
 import java.util.List;
 
-import xyz.nspain.grocerybudget.persistance.Item;
+import xyz.nspain.grocerybudget.persistance.ShoppingList;
 
 class ShoppingListDiffCallback extends DiffUtil.Callback {
-    private List<Item> mOldItems;
-    private List<Item> mNewItems;
+    private List<ShoppingList> mOldLists;
+    private List<ShoppingList> mNewLists;
 
-    public ShoppingListDiffCallback(List<Item> oldItems, List<Item> newItems) {
-        mOldItems = oldItems;
-        mNewItems = newItems;
+    public ShoppingListDiffCallback(List<ShoppingList> oldLists, List<ShoppingList> newLists) {
+        mOldLists = oldLists;
+        mNewLists = newLists;
     }
 
     @Override
     public int getOldListSize() {
-        return mOldItems.size();
+        return mOldLists.size();
     }
 
     @Override
     public int getNewListSize() {
-        return mNewItems.size();
+        return mNewLists.size();
     }
 
     @Override
     public boolean areItemsTheSame(int oldItemPos, int newItemPos) {
-        return mOldItems.get(oldItemPos).getId() == mNewItems.get(newItemPos).getId();
+        return mOldLists.get(oldItemPos).getId() == mNewLists.get(newItemPos).getId();
     }
 
     @Override
     public boolean areContentsTheSame(int oldItemPos, int newItemPos) {
-        return mOldItems.get(oldItemPos).equals(mNewItems.get(newItemPos));
+        return mOldLists.get(oldItemPos).equals(mNewLists.get(newItemPos));
     }
 }

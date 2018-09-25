@@ -22,7 +22,7 @@ import static android.arch.persistence.room.ForeignKey.CASCADE;
         ),
         indices = {@Index("list_id")})
 @TypeConverters({Converters.class})
-public class Item {
+public class Item implements ShoppingListDatabaseEntity {
     private static final String TAG = Item.class.getCanonicalName();
     @ColumnInfo(name = "id")
     @PrimaryKey(autoGenerate = true)

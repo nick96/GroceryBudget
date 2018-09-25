@@ -42,8 +42,12 @@ public abstract class ShoppingListDao {
     @Query("UPDATE shopping_list set is_current = 1 WHERE name LIKE :listName")
     public abstract void setCurrentListByName(String listName);
 
-    public void updateCurrentList(String listName) {
-        unsetCurrentList();
-        setCurrentListByName(listName);
-    }
+    @Query("UPDATE shopping_list SET is_current = (name LIKE :listName)")
+    public abstract void updateCurrentList(String listName);
+
+    @Query("SELECT * FROM shopping_list WHERE is_current")
+    public abstract LiveData<ShoppingList> getCurrentList();
+
+    @Query("SELECT * FROM shopping_list WHERE is_current")
+    public abstract List<ShoppingList> getCurrentLists();
 }
