@@ -85,4 +85,17 @@ public class ShoppingListRepository {
     public LiveData<BigDecimal> getCurrentListTotal() {
         return mItemDao.getTotalCostForCurrentList();
     }
+
+    public LiveData<List<ShoppingList>> getLists() {
+        return mShoppingListDao.getLists();
+    }
+
+    public void updateCurrentList(final String listName) {
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                mShoppingListDao.updateCurrentList(listName);
+            }
+        });
+    }
 }

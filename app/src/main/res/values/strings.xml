@@ -11,4 +11,6 @@
     <string name="new_list_dialog_pos">Create</string>
     <string name="new_list_dialog_hint">List name</string>
     <string name="new_list_dialog_neg">Cancel</string>
+    <string name="shopping_list_menu">Lists</string>
+    <string name="edit_lists">Edit lists</string>
 </resources>

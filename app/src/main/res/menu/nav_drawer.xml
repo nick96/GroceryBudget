@@ -5,5 +5,10 @@
             android:id="@+id/new_list"
             android:icon="@drawable/ic_add_white_24dp"
             android:title="@string/new_list" />
+        <item
+            android:id="@+id/edit_lists"
+            android:icon="@drawable/ic_edit_24px"
+            android:title="@string/edit_lists"
+            />
     </group>
 </menu>

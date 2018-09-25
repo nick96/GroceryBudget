@@ -12,7 +12,10 @@ import java.util.List;
 @Dao
 public abstract class ShoppingListDao {
     @Query("SELECT * FROM shopping_list")
-    abstract List<ShoppingList> getLists();
+    abstract LiveData<List<ShoppingList>> getLists();
+
+    @Query("SELECT * FROM shopping_list")
+    abstract List<ShoppingList> getListsBlocking();
 
     @Query("SELECT id FROM shopping_list WHERE name LIKE :name")
     abstract long getListIdByName(String name);
@@ -21,7 +24,7 @@ public abstract class ShoppingListDao {
     abstract long getCurrentListId();
 
     boolean isEmpty() {
-        return getLists().isEmpty();
+        return getListsBlocking().isEmpty();
     }
 
     @Insert
@@ -32,4 +35,15 @@ public abstract class ShoppingListDao {
 
     @Delete
     abstract void delete(ShoppingList... lists);
+
+    @Query("UPDATE shopping_list set is_current = 0")
+    public abstract void unsetCurrentList();
+
+    @Query("UPDATE shopping_list set is_current = 1 WHERE name LIKE :listName")
+    public abstract void setCurrentListByName(String listName);
+
+    public void updateCurrentList(String listName) {
+        unsetCurrentList();
+        setCurrentListByName(listName);
+    }
 }

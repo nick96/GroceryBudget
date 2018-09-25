@@ -26,7 +26,7 @@ import xyz.nspain.grocerybudget.AdapterNotifyMessage.ChangeType;
 import xyz.nspain.grocerybudget.persistance.Item;
 
 public class ShoppingListAdapter extends RecyclerView.Adapter<ShoppingListAdapter.ItemViewHolder> {
-    private static final String TAG = ShoppingListItemAdapter.class.getCanonicalName();
+    private static final String TAG = ShoppingListAdapter.class.getCanonicalName();
     private final LayoutInflater mInflator;
     private List<Item> mItems = Collections.emptyList();
 

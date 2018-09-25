@@ -3,26 +3,37 @@ package xyz.nspain.grocerybudget;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Bundle;
-import android.os.Parcelable;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.NavigationView;
+import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.Toolbar;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.SubMenu;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.Switch;
 
 import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.util.List;
-import java.util.Locale;
 
 import xyz.nspain.grocerybudget.persistance.Item;
+import xyz.nspain.grocerybudget.persistance.ShoppingList;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -32,8 +43,9 @@ public class MainActivity extends AppCompatActivity {
     private BottomSheetBehavior bottomSheetBehavior;
     private EditText mTotalCostView;
     private ShoppingListViewModel mShoppingListViewModel;
-    private DrawerLayout navigationDrawer;
-    private Parcelable mListState;
+    private FloatingActionButton mAddItemFAB;
+    private DrawerLayout mNavigationDrawer;
+    private NavigationView mNavigationView;
     private NumberFormat mCurrencyFormatter;
 
     /**
@@ -43,59 +55,113 @@ public class MainActivity extends AppCompatActivity {
     public final static String LIST_STATE_KEY = "LIST_STATE";
 
     private ShoppingList shoppingList;
+    private Toolbar mToolbar;
 
-    @Override
+        @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_main);
 
         mCurrencyFormatter = NumberFormat.getCurrencyInstance(getCurrentLocale());
-
-        // Setup the recycler view, this is where the shopping list items will show
+        mTotalCostView = findViewById(R.id.totalCost);
+        mShoppingListViewModel = ViewModelProviders.of(this).get(ShoppingListViewModel.class);
         mRecyclerView = findViewById(R.id.shoppingList);
         mLayoutManager = new LinearLayoutManager(this);
         mAdapter = new ShoppingListAdapter(this, mCurrencyFormatter);
+        mAddItemFAB = findViewById(R.id.fab);
+        mNavigationDrawer = findViewById(R.id.main_activity);
+        mNavigationView = findViewById(R.id.nav_view);
+        mToolbar = findViewById(R.id.toolbar);
 
+        setupToolbar();
+        setupRecyclerView();
+        setupViewModelObservers();
+        setupFloatingActionButton();
+        setupNavigationDrawer();
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+            switch (item.getItemId()) {
+                case android.R.id.home:
+                    mNavigationDrawer.openDrawer(GravityCompat.START);
+                    return true;
+            }
+            return super.onOptionsItemSelected(item);
+    }
+
+    private void setupToolbar() {
+        setSupportActionBar(mToolbar);
+        ActionBar actionBar = getSupportActionBar();
+        actionBar.setDisplayHomeAsUpEnabled(true);
+        actionBar.setHomeAsUpIndicator(R.drawable.ic_baseline_menu_24px);
+    }
+
+    private void setupNavigationDrawer() {
+            final Menu menu = mNavigationView.getMenu();
+            final SubMenu shoppingListMenu = menu.addSubMenu(R.string.shopping_list_menu);
+
+            mShoppingListViewModel.getLists().observe(this, new Observer<List<ShoppingList>>() {
+                @Override
+                public void onChanged(@Nullable List<ShoppingList> shoppingLists) {
+                    shoppingListMenu.clear();
+                    for (ShoppingList shoppingList: shoppingLists) {
+                        shoppingListMenu.add(shoppingList.getName());
+                    }
+                }
+            });
+
+        mNavigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
+                menuItem.setChecked(true);
+                mNavigationDrawer.closeDrawers();
+
+                Log.d(TAG, "Selected " + menuItem);
+                if (menuItem.getItemId() == R.id.new_list) {
+                    createNewList();
+                } else if (menuItem.getItemId() == R.id.edit_lists) {
+
+                } else {
+                    // Must've clicked a list name
+                    mShoppingListViewModel.updateCurrentList(menuItem.getTitle().toString());
+                }
+
+                return true;
+            }
+        });
+    }
+
+    private void createNewList() {
+            LayoutInflater factory = LayoutInflater.from(this);
+            final View listTitleView = factory.inflate(R.layout.new_list_dialog_view, null);
+            final AlertDialog.Builder alertBuilder = new AlertDialog.Builder(this, R.style.AppCompatAlertDialogStyle);
+            alertBuilder.setTitle(R.string.new_list_dialog_title);
+            alertBuilder.setView(listTitleView);
+            alertBuilder.setPositiveButton(R.string.new_list_dialog_pos, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    EditText listTitleText = listTitleView.findViewById(R.id.new_list_edittext);
+                    String title = listTitleText.getText().toString();
+                    ShoppingList newList = new ShoppingList(title);
+                    mShoppingListViewModel.insertList(newList);
+                    mShoppingListViewModel.updateCurrentList(newList.getName());
+                }
+            });
+
+            alertBuilder.setNegativeButton(R.string.new_list_dialog_neg, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+
+                }
+            });
+        alertBuilder.show();
+    }
+
+    private void setupRecyclerView() {
+        // Setup the recycler view, this is where the shopping list items will show
         mRecyclerView.setLayoutManager(mLayoutManager);
         mRecyclerView.setAdapter(mAdapter);
-
-        mShoppingListViewModel = ViewModelProviders.of(this).get(ShoppingListViewModel.class);
-
-        mShoppingListViewModel.getItems().observe(this, new Observer<List<Item>>() {
-            @Override
-            public void onChanged(@Nullable List<Item> items) {
-                if (!mShoppingListViewModel.isCircularUpdate()) {
-                    Log.d(TAG, "Is not circular update");
-                    mAdapter.setItems(items);
-                    mShoppingListViewModel.setIsCircularUpdate(true);
-                } else {
-                    mShoppingListViewModel.setIsCircularUpdate(false);
-                    Log.d(TAG, "Is circular update");
-                }
-            }
-        });
-
-        mTotalCostView = findViewById(R.id.totalCost);
-        mShoppingListViewModel.getCurrentListTotal().observe(this, new Observer<BigDecimal>() {
-            @Override
-            public void onChanged(@Nullable BigDecimal totalCost) {
-                Log.d(TAG, "Updating total cost");
-                mTotalCostView.setText(mCurrencyFormatter.format(totalCost));
-            }
-        });
-
-        // Setup the floating button to add new items to the shopping list
-        FloatingActionButton fab = findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Item item = new Item("", new BigDecimal(0), false);
-                Log.d(TAG, "Inserting " + item + " into db");
-                mShoppingListViewModel.setIsCircularUpdate(false);
-                mShoppingListViewModel.insertItem(item);
-            }
-        });
 
         mAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
             @Override
@@ -119,6 +185,43 @@ public class MainActivity extends AppCompatActivity {
                     Log.d(TAG, "Payload is null so not sending update to view model");
                 }
                 mShoppingListViewModel.setIsCircularUpdate(true);
+            }
+        });
+    }
+
+    private void setupViewModelObservers() {
+        mShoppingListViewModel.getItems().observe(this, new Observer<List<Item>>() {
+            @Override
+            public void onChanged(@Nullable List<Item> items) {
+                if (!mShoppingListViewModel.isCircularUpdate()) {
+                    Log.d(TAG, "Is not circular update");
+                    mAdapter.setItems(items);
+                    mShoppingListViewModel.setIsCircularUpdate(true);
+                } else {
+                    mShoppingListViewModel.setIsCircularUpdate(false);
+                    Log.d(TAG, "Is circular update");
+                }
+            }
+        });
+
+        mShoppingListViewModel.getCurrentListTotal().observe(this, new Observer<BigDecimal>() {
+            @Override
+            public void onChanged(@Nullable BigDecimal totalCost) {
+                Log.d(TAG, "Updating total cost");
+                mTotalCostView.setText(mCurrencyFormatter.format(totalCost));
+            }
+        });
+    }
+
+    private void setupFloatingActionButton() {
+        // Setup the floating button to add new items to the shopping list
+        mAddItemFAB.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Item item = new Item("", new BigDecimal(0), false);
+                Log.d(TAG, "Inserting " + item + " into db");
+                mShoppingListViewModel.setIsCircularUpdate(false);
+                mShoppingListViewModel.insertItem(item);
             }
         });
     }

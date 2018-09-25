@@ -67,4 +67,12 @@ public class ShoppingListViewModel extends AndroidViewModel {
     public LiveData<BigDecimal> getCurrentListTotal() {
         return mRepository.getCurrentListTotal();
     }
+
+    public LiveData<List<ShoppingList>> getLists() {
+        return mRepository.getLists();
+    }
+
+    public void updateCurrentList(String listName) {
+        mRepository.updateCurrentList(listName);
+    }
 }
