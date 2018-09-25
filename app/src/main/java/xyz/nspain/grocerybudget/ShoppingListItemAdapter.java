@@ -24,7 +24,10 @@ import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
+
+import xyz.nspain.grocerybudget.persistance.Item;
 
 class ShoppingListItemAdapter extends RecyclerView.Adapter<ShoppingListItemAdapter.ViewHolder> {
 
@@ -75,6 +78,11 @@ class ShoppingListItemAdapter extends RecyclerView.Adapter<ShoppingListItemAdapt
         bindNewItem = false;
     }
 
+    public void setShoppingList(List<Item> items) {
+        shoppingList.setItems(items);
+        notifyDataSetChanged();
+    }
+
     public class ViewHolder extends RecyclerView.ViewHolder {
         public CheckBox isBought;
         public EditText name;
@@ -83,9 +91,9 @@ class ShoppingListItemAdapter extends RecyclerView.Adapter<ShoppingListItemAdapt
 
         public ViewHolder(final View v) {
             super(v);
-            isBought = v.findViewById(R.id.isBought);
-            name = v.findViewById(R.id.name);
-            cost = v.findViewById(R.id.cost);
+            isBought = v.findViewById(R.id.item_is_bought);
+            name = v.findViewById(R.id.item_name);
+            cost = v.findViewById(R.id.item_cost);
             deleteItemBtn = v.findViewById(R.id.deleteItemBtn);
 
             isBought.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {

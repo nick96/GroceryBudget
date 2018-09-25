@@ -1,18 +1,14 @@
 package xyz.nspain.grocerybudget;
 
-import android.content.Context;
 import android.content.res.Resources;
 import android.support.annotation.IdRes;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.espresso.NoMatchingViewException;
 import android.support.test.espresso.ViewAssertion;
-import android.support.test.espresso.action.ViewActions;
-import android.support.test.espresso.assertion.ViewAssertions;
 import android.support.test.filters.LargeTest;
 import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.View;
 
 import org.hamcrest.Description;
@@ -26,7 +22,6 @@ import org.junit.runner.RunWith;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
 import java.io.ObjectInputStream;
 
 import static android.support.test.espresso.Espresso.onView;
@@ -41,6 +36,7 @@ import static org.hamcrest.CoreMatchers.anything;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.*;
+import static xyz.nspain.grocerybudget.Utils.withRecyclerView;
 
 @RunWith(AndroidJUnit4.class)
 @LargeTest
@@ -72,23 +68,23 @@ public class ShoppingListItemActions {
 
     @Test
     public void oneItemToBegin() {
-        onView(withId(R.id.shoppingList)).check(new RecyclerViewItemCountAssertion(1));
+        onView(withId(R.id.shoppingList)).check(new Utils.RecyclerViewItemCountAssertion(1));
     }
 
     @Test
     public void createItemTest() {
         onView(withId(R.id.fab)).perform(click());
-        onView(withId(R.id.shoppingList)).check(new RecyclerViewItemCountAssertion(2));
+        onView(withId(R.id.shoppingList)).check(new Utils.RecyclerViewItemCountAssertion(2));
     }
 
     @Test
     public void tickItemUpdatesTotalCost() {
         // Insert data into the name and cost fields
         onView(withRecyclerView(R.id.shoppingList)
-                .atPositionOnView(0, R.id.name))
+                .atPositionOnView(0, R.id.item_name))
                 .perform(typeText(itemName));
         onView(withRecyclerView(R.id.shoppingList)
-                .atPositionOnView(0, R.id.cost))
+                .atPositionOnView(0, R.id.item_cost))
                 .perform(clearText())
                 .perform(typeText(itemCost));
 
@@ -97,7 +93,7 @@ public class ShoppingListItemActions {
 
         // Tick the item
         onView(withRecyclerView(R.id.shoppingList)
-                .atPositionOnView(0, R.id.isBought))
+                .atPositionOnView(0, R.id.item_is_bought))
                 .perform(click());
 
         // Check that the total cost has been updated
@@ -108,10 +104,10 @@ public class ShoppingListItemActions {
     public void dataSavedWhenItemLosesFocus() {
         assertThat((new File(dataFileName)).exists(), is(false));
         onView(withRecyclerView(R.id.shoppingList)
-                .atPositionOnView(0, R.id.name))
+                .atPositionOnView(0, R.id.item_name))
                 .perform(typeText(itemName));
         onView(withRecyclerView(R.id.shoppingList)
-                .atPositionOnView(0, R.id.cost))
+                .atPositionOnView(0, R.id.item_cost))
                 .perform(click());
         assertThat((new File(dataFileName)).exists(), is(true));
 
@@ -130,10 +126,10 @@ public class ShoppingListItemActions {
     public void dataSavedWhenItemTicked() {
         assertThat((new File(dataFileName)).exists(), is(false));
         onView(withRecyclerView(R.id.shoppingList)
-                .atPositionOnView(0, R.id.name))
+                .atPositionOnView(0, R.id.item_name))
                 .perform(typeText(itemName));
         onView(withRecyclerView(R.id.shoppingList)
-                .atPositionOnView(0, R.id.isBought))
+                .atPositionOnView(0, R.id.item_is_bought))
                 .perform(click());
         assertThat((new File(dataFileName)).exists(), is(true));
 
@@ -155,22 +151,22 @@ public class ShoppingListItemActions {
     @Test
     public void costUnchangedWhenItemTicked() {
         onView(withRecyclerView(R.id.shoppingList)
-                .atPositionOnView(0, R.id.cost))
+                .atPositionOnView(0, R.id.item_cost))
                 .perform(clearText())
                 .perform(typeText(itemCost));
         onView(withRecyclerView(R.id.shoppingList)
-                .atPositionOnView(0, R.id.name))
+                .atPositionOnView(0, R.id.item_name))
                 .perform(typeText(itemName));
         onView(withRecyclerView(R.id.shoppingList)
-                .atPositionOnView(0, R.id.cost))
+                .atPositionOnView(0, R.id.item_cost))
                 .perform(clearText())
                 .perform(typeText("100"));
         onView(withRecyclerView(R.id.shoppingList)
-                .atPositionOnView(0, R.id.isBought))
+                .atPositionOnView(0, R.id.item_is_bought))
                 .perform(click());
 
         onView(withRecyclerView(R.id.shoppingList)
-                .atPositionOnView(0, R.id.cost))
+                .atPositionOnView(0, R.id.item_cost))
                 .check(matches(withText("$100.00")));
     }
 
@@ -181,111 +177,16 @@ public class ShoppingListItemActions {
     @Test
     public void costUnchangedOnFocusLoss() {
         onView(withRecyclerView(R.id.shoppingList)
-                .atPositionOnView(0, R.id.cost))
+                .atPositionOnView(0, R.id.item_cost))
                 .perform(clearText())
                 .perform(typeText("1"));
         onView(withRecyclerView(R.id.shoppingList)
-                .atPositionOnView(0, R.id.name))
+                .atPositionOnView(0, R.id.item_name))
                 .perform(click());
 
         onView(withRecyclerView(R.id.shoppingList)
-                .atPositionOnView(0, R.id.cost))
+                .atPositionOnView(0, R.id.item_cost))
                 .check(matches(withText("$1.00")));
-    }
-
-    private RecyclerViewMatcher withRecyclerView(final int id) {
-        return new RecyclerViewMatcher(id);
-    }
-
-    private class RecyclerViewItemCountAssertion implements ViewAssertion {
-        private int assertedCount;
-
-        public RecyclerViewItemCountAssertion(int count) {
-            assertedCount = count;
-        }
-
-        @Override
-        public void check(View view, NoMatchingViewException noViewFoundException) {
-            if (noViewFoundException != null) {
-                throw noViewFoundException;
-            }
-            RecyclerView recyclerView = (RecyclerView)view;
-            RecyclerView.Adapter adapter = recyclerView.getAdapter();
-            assertThat(adapter.getItemCount(), is(assertedCount));
-        }
-    }
-
-    /**
-     * From https://stackoverflow.com/questions/28476507/using-espresso-to-click-view-inside-recyclerview-item
-     */
-    private class RecyclerViewMatcher {
-        private final int recyclerViewId;
-
-        public RecyclerViewMatcher(int recyclerViewId) {
-            this.recyclerViewId = recyclerViewId;
-        }
-
-        public Matcher<View> atPosition(final int position) {
-            return atPositionOnView(position, -1);
-        }
-
-        public Matcher<View> atPositionOnView(final int position, final int targetViewId) {
-            return new TypeSafeMatcher<View>() {
-                Resources resources = null;
-                View childView;
-
-                @Override
-                protected boolean matchesSafely(View item) {
-                    if (childView == null) {
-                        RecyclerView recyclerView = item.getRootView().findViewById(recyclerViewId);
-                        if (recyclerView != null) {
-                            childView = recyclerView.findViewHolderForAdapterPosition(position).itemView;
-                        } else {
-                            return false;
-                        }
-
-                    }
-
-                    if (targetViewId == -1) {
-                        return item == childView;
-                    } else {
-                        View targetView = childView.findViewById(targetViewId);
-                        return item == targetView;
-                    }
-                }
-
-                @Override
-                public void describeTo(Description description) {
-                    int id = targetViewId == -1 ? recyclerViewId : targetViewId;
-                    String idDesc = Integer.toString(id);
-                    if (this.resources != null) {
-                        try {
-                            idDesc = this.resources.getResourceName(id);
-                        } catch (Resources.NotFoundException e) {
-                            idDesc = String.format("%s (resource name not found)", id);
-                        }
-                    }
-                    description.appendText(idDesc);
-                }
-            };
-        }
-    }
-
-    public static int getCountFromRecyclerView(@IdRes int RecyclerViewId) {
-        final int[] COUNT = {0};
-        Matcher matcher = new TypeSafeMatcher<View>() {
-            @Override
-            protected boolean matchesSafely(View item) {
-                int itemCount = ((RecyclerView) item).getAdapter().getItemCount();
-                COUNT[0] = ((RecyclerView) item).getAdapter().getItemCount();
-                return true;
-            }
-            @Override
-            public void describeTo(Description description) {
-            }
-        };
-        onView(allOf(withId(RecyclerViewId),isDisplayed())).check(matches(matcher));
-        return COUNT[0];
     }
 }
 

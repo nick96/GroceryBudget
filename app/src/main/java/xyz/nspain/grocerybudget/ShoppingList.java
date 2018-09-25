@@ -7,7 +7,10 @@ import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
+
+import xyz.nspain.grocerybudget.persistance.Item;
 
 public class ShoppingList implements Serializable {
     private static final String TAG = "GB/ShoppingList";
@@ -123,5 +126,9 @@ public class ShoppingList implements Serializable {
             }
         }
         return true;
+    }
+
+    public void setItems(List<Item> items) {
+        this.items = (ArrayList) items;
     }
 }
