@@ -30,7 +30,6 @@ public class ShoppingListRepository {
             public void run() {
                 long listId = mShoppingListDao.getCurrentListId();
                 item.setListId(listId);
-                Log.d(TAG, "Inserting " + item);
                 mItemDao.insert(item);
             }
         });
@@ -75,20 +74,12 @@ public class ShoppingListRepository {
         AsyncTask.execute(new Runnable() {
             @Override
             public void run() {
-                Log.d(TAG, "Updating " + item);
                 mItemDao.update(item);
-                Log.d(TAG, "Updated " + item);
             }
         });
     }
 
     public LiveData<BigDecimal> getCurrentListTotal() {
-        AsyncTask.execute(new Runnable() {
-            @Override
-            public void run() {
-                Log.d(TAG, "Current list(s): " + mShoppingListDao.getCurrentLists());
-            }
-        });
         return mItemDao.getTotalCostForCurrentList();
     }
 
@@ -129,5 +120,23 @@ public class ShoppingListRepository {
 
     public LiveData<List<Item>> getCurrentListItems() {
         return mItemDao.getItemsInCurrentList();
+    }
+
+    public void deleteItemsInCurrentList() {
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                mItemDao.deleteItemsInCurrentList();
+            }
+        });
+    }
+
+    public void deleteAllLists() {
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                mShoppingListDao.deleteAll();
+            }
+        });
     }
 }

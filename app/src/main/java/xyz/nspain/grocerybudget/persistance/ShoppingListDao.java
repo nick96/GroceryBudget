@@ -50,4 +50,7 @@ public abstract class ShoppingListDao {
 
     @Query("SELECT * FROM shopping_list WHERE is_current")
     public abstract List<ShoppingList> getCurrentLists();
+
+    @Query("DELETE FROM shopping_list")
+    public abstract void deleteAll();
 }

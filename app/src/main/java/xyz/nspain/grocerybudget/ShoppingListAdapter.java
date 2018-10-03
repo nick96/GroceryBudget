@@ -7,7 +7,6 @@ import android.support.v7.widget.AppCompatImageButton;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,13 +24,13 @@ import java.util.List;
 import xyz.nspain.grocerybudget.AdapterNotifyMessage.ChangeType;
 import xyz.nspain.grocerybudget.persistance.Item;
 
-public class ShoppingListAdapter extends RecyclerView.Adapter<ShoppingListAdapter.ItemViewHolder> {
+public class ShoppingListAdapter extends RecyclerViewAdapterWithRemovePayload<ShoppingListAdapter.ItemViewHolder> {
     private static final String TAG = ShoppingListAdapter.class.getCanonicalName();
     private final LayoutInflater mInflator;
     private List<Item> mItems = Collections.emptyList();
 
     private boolean mOnBind = false;
-    private NumberFormat mCurrencyFormatter;
+    private final NumberFormat mCurrencyFormatter;
 
     private enum CursorLocation {ITEM_NAME_VIEW, ITEM_COST_VIEW};
     private CursorLocation mCursorLocation = null;
@@ -51,6 +50,94 @@ public class ShoppingListAdapter extends RecyclerView.Adapter<ShoppingListAdapte
         private final CheckBox mItemIsBoughtView;
         private final AppCompatImageButton mItemDeleteButton;
 
+        private final TextWatcher mItemCostViewTextWatcher = new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (!mOnBind) {
+                    mCursorPos = mItemCostView.getSelectionStart();
+                    final int pos = getAdapterPosition();
+                    Item currItem = mItems.get(pos);
+                    BigDecimal cost = parseItemCostText(s.toString());
+                    currItem.setCost(cost);
+                    AdapterNotifyMessage msg = new AdapterNotifyMessage(currItem, ChangeType.UPDATE_ITEM);
+                    notifyItemChanged(pos, msg);
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        };
+        private final View.OnFocusChangeListener mItemCostViewFocusChangeListener = new View.OnFocusChangeListener() {
+            private String mCurrentText = "";
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                mItemCostView.removeTextChangedListener(mItemCostViewTextWatcher);
+                String s = mItemCostView.getText().toString();
+                if (hasFocus) {
+                    mCursorLocation = CursorLocation.ITEM_COST_VIEW;
+                    mCursorPos = mItemCostView.getSelectionStart();
+                } else {
+                    mCursorLocation = null;
+                    if (!s.equals(mCurrentText)) {
+                        String cleanString = s;
+                        try {
+                            cleanString = mCurrencyFormatter.parse(s).toString();
+                        } catch (ParseException|NumberFormatException e) {
+                        }
+                        String fmtedText = mCurrencyFormatter.format(new BigDecimal(cleanString));
+                        mCurrentText = fmtedText;
+                        mItemCostView.setText(fmtedText);
+                        mItemCostView.setSelection(mCursorPos);
+                    }
+
+                }
+                mItemCostView.addTextChangedListener(mItemCostViewTextWatcher);
+            }
+        };
+
+        private final TextWatcher mItemNameViewTextWatcher = new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (!mOnBind) {
+                    final int pos = getAdapterPosition();
+                    Item currItem = mItems.get(pos);
+                    currItem.setName(s.toString());
+                    mCursorPos = mItemNameView.getSelectionStart();
+                    AdapterNotifyMessage msg = new AdapterNotifyMessage(currItem, ChangeType.UPDATE_ITEM);
+                    notifyItemChanged(pos, msg);
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
+            }
+        };
+        private final View.OnFocusChangeListener mItemNameViewFocusChangeListener = new View.OnFocusChangeListener() {
+            private final String x = "";
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if (hasFocus) {
+                    mCursorLocation = CursorLocation.ITEM_NAME_VIEW;
+                    mCursorPos = mItemNameView.getSelectionStart();
+                } else {
+                    mCursorLocation = null;
+                }
+            }
+        };
+
         public ItemViewHolder(@NonNull View itemView) {
             super(itemView);
             mItemNameView = itemView.findViewById(R.id.item_name);
@@ -58,76 +145,12 @@ public class ShoppingListAdapter extends RecyclerView.Adapter<ShoppingListAdapte
             mItemIsBoughtView = itemView.findViewById(R.id.item_is_bought);
             mItemDeleteButton = itemView.findViewById(R.id.deleteItemBtn);
 
-            mItemNameView.addTextChangedListener(new TextWatcher() {
-                @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            mItemNameView.addTextChangedListener(mItemNameViewTextWatcher);
+            mItemNameView.setOnFocusChangeListener(mItemNameViewFocusChangeListener);
 
-                }
+            mItemCostView.addTextChangedListener(mItemCostViewTextWatcher);
+            mItemCostView.setOnFocusChangeListener(mItemCostViewFocusChangeListener);
 
-                @Override
-                public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    if (!mOnBind) {
-                        final int pos = getAdapterPosition();
-                        Item currItem = mItems.get(pos);
-                        currItem.setName(s.toString());
-                        mCursorPos = mItemNameView.getSelectionStart();
-                        AdapterNotifyMessage msg = new AdapterNotifyMessage(currItem, ChangeType.UPDATE_ITEM);
-                        notifyItemChanged(pos, msg);
-                    }
-                }
-
-                @Override
-                public void afterTextChanged(Editable s) {
-                }
-            });
-            mItemNameView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-                @Override
-                public void onFocusChange(View v, boolean hasFocus) {
-                    if (hasFocus) {
-                        mCursorLocation = CursorLocation.ITEM_NAME_VIEW;
-                        mCursorPos = mItemNameView.getSelectionStart();
-                    } else {
-                        mCursorLocation = null;
-                    }
-                }
-            });
-            mItemCostView.addTextChangedListener(new TextWatcher() {
-                @Override
-                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-
-                }
-
-                @Override
-                public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    if (!mOnBind) {
-                        Log.d(TAG + ":mItemCostView", "Found edit to item cost");
-                        mCursorPos = mItemCostView.getSelectionStart();
-                        final int pos = getAdapterPosition();
-                        Item currItem = mItems.get(pos);
-                        BigDecimal cost = parseItemCostText(s.toString());
-                        currItem.setCost(cost);
-                        AdapterNotifyMessage msg = new AdapterNotifyMessage(currItem, ChangeType.UPDATE_ITEM);
-                        notifyItemChanged(pos, msg);
-                    }
-                }
-
-                @Override
-                public void afterTextChanged(Editable s) {
-
-                }
-            });
-            mItemCostView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-                @Override
-                public void onFocusChange(View v, boolean hasFocus) {
-                    Log.d(TAG, "Focus changed on item cost");
-                    if (hasFocus) {
-                        mCursorLocation = CursorLocation.ITEM_COST_VIEW;
-                        mCursorPos = mItemCostView.getSelectionStart();
-                    } else {
-                        mCursorLocation = null;
-                    }
-                }
-            });
             mItemIsBoughtView.setOnCheckedChangeListener(this);
             mItemDeleteButton.setOnClickListener(this);
         }
@@ -135,7 +158,6 @@ public class ShoppingListAdapter extends RecyclerView.Adapter<ShoppingListAdapte
         @Override
         public void onClick(View v) {
             if (v.getId() == mItemDeleteButton.getId() && !mOnBind) {
-                Log.d(TAG, "Adapter position for deletion: " + getAdapterPosition());
                 final int pos = getAdapterPosition();
                 removeItemAt(pos);
             }
@@ -147,7 +169,6 @@ public class ShoppingListAdapter extends RecyclerView.Adapter<ShoppingListAdapte
                 final int pos = getAdapterPosition();
                 mItems.get(pos).setIsBought(isChecked);
                 AdapterNotifyMessage msg = new AdapterNotifyMessage(mItems.get(pos), ChangeType.UPDATE_ITEM);
-                Log.d(TAG, "Changed is bought status");
                 notifyItemChanged(pos, msg);
             }
         }
@@ -163,11 +184,9 @@ public class ShoppingListAdapter extends RecyclerView.Adapter<ShoppingListAdapte
             }
 
         } catch (ParseException parserException) {
-            Log.d(TAG, "Cannot parse " + costText + " using currency formatter", parserException);
             try {
                 cost = new BigDecimal(costText);
             } catch (NumberFormatException numberFormatException) {
-                Log.d(TAG, "Cannot parse " + costText + " using regular BigDecimal parser", numberFormatException);
             }
         }
         return cost;
@@ -183,12 +202,9 @@ public class ShoppingListAdapter extends RecyclerView.Adapter<ShoppingListAdapte
     @Override
     public void onBindViewHolder(@NonNull ItemViewHolder itemViewHolder, int position) {
         mOnBind = true;
-        Log.d(TAG, "Binding view holder");
         Item currItem = mItems.get(position);
         String itemName = currItem.getName() != null ? currItem.getName() : "";
         BigDecimal itemCost = currItem.getCost() != null ? currItem.getCost() : new BigDecimal(0);
-
-        Log.d(TAG, "Binding item: name: " + itemName + "; cost: " + itemCost);
 
         String itemCostTxt = itemCost.toString();
         if (mCurrencyFormatter != null) {
@@ -202,16 +218,12 @@ public class ShoppingListAdapter extends RecyclerView.Adapter<ShoppingListAdapte
             int textLen;
             switch (mCursorLocation) {
                 case ITEM_COST_VIEW:
-                    Log.d(TAG, "In item cost view; text length = " + itemViewHolder.mItemCostView.getText().toString().length()
-                        + " ; cursor position = " + mCursorPos);
                     textLen = itemViewHolder.mItemCostView.getText().length();
                     if (mCursorPos >= 0 && mCursorPos <= textLen) {
                         itemViewHolder.mItemCostView.setSelection(mCursorPos);
                     }
                     break;
                 case ITEM_NAME_VIEW:
-                    Log.d(TAG, "In item name view; text length = " + itemViewHolder.mItemCostView.getText().toString().length()
-                            + " ; cursor position = " + mCursorPos);
                     textLen = itemViewHolder.mItemNameView.getText().length();
                     if (mCursorPos >= 0 && mCursorPos <= textLen) {
                         itemViewHolder.mItemNameView.setSelection(mCursorPos);
@@ -232,7 +244,6 @@ public class ShoppingListAdapter extends RecyclerView.Adapter<ShoppingListAdapte
     }
 
     void setItems(List<Item> items) {
-        Log.d(TAG, "Calling setItems");
         if (mItems == null) {
             mItems = items;
         } else {
@@ -247,11 +258,9 @@ public class ShoppingListAdapter extends RecyclerView.Adapter<ShoppingListAdapte
     private void removeItemAt(int pos) {
         if (pos >= 0 && pos < mItems.size()) {
             Item removedItem = mItems.remove(pos);
-            notifyItemRemoved(pos);
-            Log.d(TAG, "Removed " + removedItem + " from list");
             AdapterNotifyMessage msg = new AdapterNotifyMessage(removedItem, ChangeType.DELETE_ITEM);
-            Log.d(TAG, "Sending " + msg);
-            notifyItemChanged(pos, msg);
+            notifyItemRemove(pos, msg);
+            notifyItemRangeChanged(pos, mItems.size());
         }
     }
 }

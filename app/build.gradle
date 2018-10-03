@@ -40,8 +40,6 @@ dependencies {
     implementation "android.arch.lifecycle:viewmodel:1.1.1"
     implementation 'org.apache.commons:commons-collections4:4.1'
 
-    implementation 'org.fabiomsr:moneytextview:1.1.0'
-
 
     def room_version = "1.1.1"
 

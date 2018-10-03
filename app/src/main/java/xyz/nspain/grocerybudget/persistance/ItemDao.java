@@ -50,4 +50,7 @@ public abstract class ItemDao {
 
     @Delete
     abstract void delete(Item... items);
+
+    @Query("DELETE FROM shopping_list_item WHERE list_id IN (SELECT id FROM shopping_list WHERE is_current)")
+    public abstract void deleteItemsInCurrentList();
 }

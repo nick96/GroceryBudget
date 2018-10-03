@@ -1,11 +1,14 @@
 package xyz.nspain.grocerybudget;
 
 import android.content.Context;
+import android.graphics.Color;
 import android.support.annotation.NonNull;
 import android.support.v7.util.DiffUtil;
 import android.support.v7.widget.AppCompatImageButton;
+import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,15 +18,19 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import xyz.nspain.grocerybudget.persistance.Item;
 import xyz.nspain.grocerybudget.persistance.ShoppingList;
 
-class ShoppingListEditAdapter extends RecyclerView.Adapter<ShoppingListEditAdapter.ViewHolder> {
+import static xyz.nspain.grocerybudget.AdapterNotifyMessage.ChangeType;
+
+class ShoppingListEditAdapter extends RecyclerViewAdapterWithRemovePayload<ShoppingListEditAdapter.ViewHolder> implements ItemTouchHelperAdapter{
 
     private static final String TAG = ShoppingListEditAdapter.class.getCanonicalName();
     private LayoutInflater mInflator;
     private List<ShoppingList> mLists;
     private boolean mOnBind = false;
+    private enum CursorLocation {LIST_NAME_VIEW};
+    private CursorLocation mCursorLocation = null;
+    private int mCursorPos = -1;
 
     public ShoppingListEditAdapter(Context context) {
         this(context, Collections.<ShoppingList>emptyList());
@@ -46,6 +53,18 @@ class ShoppingListEditAdapter extends RecyclerView.Adapter<ShoppingListEditAdapt
         mOnBind = true;
         ShoppingList list = mLists.get(pos);
         viewHolder.mListNameView.setText(list.getName());
+
+        if (mCursorLocation != null) {
+            int textLen;
+            switch (mCursorLocation) {
+                case LIST_NAME_VIEW:
+                    textLen = viewHolder.mListNameView.getText().length();
+                    if (mCursorPos >= 0 && mCursorPos <= textLen) {
+                        viewHolder.mListNameView.setSelection(mCursorPos);
+                    }
+                    break;
+            }
+        }
         mOnBind = false;
     }
 
@@ -66,33 +85,91 @@ class ShoppingListEditAdapter extends RecyclerView.Adapter<ShoppingListEditAdapt
         }
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
+    public class ViewHolder extends RecyclerView.ViewHolder implements ItemTouchHelperViewHolder {
+        private CardView mListCardView;
         private EditText mListNameView;
         private AppCompatImageButton mDeleteListBtn;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
+            mListCardView = itemView.findViewById(R.id.shopping_list_card);
             mListNameView = itemView.findViewById(R.id.list_name_edittext);
-            mDeleteListBtn = itemView.findViewById(R.id.delete_list_button);
 
-            mDeleteListBtn.setOnClickListener(new View.OnClickListener() {
+            mListNameView.addTextChangedListener(new TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+                }
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    if (!mOnBind) {
+                        final int pos = getAdapterPosition();
+                        mCursorPos = mListNameView.getSelectionStart();
+                        mLists.get(pos).setName(s.toString());
+                        notifyItemChanged(pos, new AdapterNotifyMessage(mLists.get(pos), ChangeType.UPDATE_LIST));
+                    }
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {
+
+                }
+            });
+
+            mListNameView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+                @Override
+                public void onFocusChange(View v, boolean hasFocus) {
+                    if (hasFocus) {
+                        mCursorLocation = CursorLocation.LIST_NAME_VIEW;
+                        mCursorPos = mListNameView.getSelectionStart();
+                    } else {
+                        mCursorPos = -1;
+                        mCursorLocation = null;
+                    }
+                }
+            });
+
+            mListCardView.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     final int pos = getAdapterPosition();
-                    removeItemAt(pos);
+                    ShoppingList list = mLists.get(pos);
+                    notifyItemChanged(pos, new AdapterNotifyMessage(list, ChangeType.VIEW_LIST));
                 }
             });
+        }
+
+        @Override
+        public void onItemSelected() {
+            itemView.setBackgroundColor(Color.LTGRAY);
+        }
+
+        @Override
+        public void onItemClear() {
+            itemView.setBackgroundColor(0);
         }
     }
 
     private void removeItemAt(int pos) {
         if (pos >= 0 && pos < mLists.size()) {
             ShoppingList removedList = mLists.remove(pos);
-            notifyItemRemoved(pos);
-            Log.d(TAG, "Removed " + removedList + " from list");
-            AdapterNotifyMessage msg = new AdapterNotifyMessage(removedList, AdapterNotifyMessage.ChangeType.DELETE_LIST);
-            Log.d(TAG, "Sending " + msg);
-            notifyItemChanged(pos, msg);
+            AdapterNotifyMessage msg = new AdapterNotifyMessage(removedList, ChangeType.DELETE_LIST);
+            notifyItemRemove(pos, msg);
+            notifyItemRangeChanged(pos, mLists.size());
         }
+    }
+
+    @Override
+    public void onItemMove(int fromPosition, int toPosition) {
+        ShoppingList prev = mLists.remove(fromPosition);
+        mLists.add(toPosition > fromPosition ? toPosition - 1 : toPosition, prev);
+        notifyItemMoved(fromPosition, toPosition);
+    }
+
+    @Override
+    public void onItemDismiss(int position) {
+        ShoppingList removedList = mLists.remove(position);
+        notifyItemRemove(position, new AdapterNotifyMessage(removedList, ChangeType.DELETE_LIST));
     }
 }

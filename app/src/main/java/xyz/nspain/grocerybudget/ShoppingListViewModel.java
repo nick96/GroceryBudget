@@ -48,7 +48,6 @@ public class ShoppingListViewModel extends AndroidViewModel {
     }
 
     public void updateItem(Item item) {
-        Log.d(TAG, "Updating item " + item);
         mRepository.updateItem(item);
     }
 
@@ -90,5 +89,13 @@ public class ShoppingListViewModel extends AndroidViewModel {
 
     public LiveData<List<Item>> getCurrentItems() {
         return mRepository.getCurrentListItems();
+    }
+
+    public void deleteItemsInCurrentList() {
+        mRepository.deleteItemsInCurrentList();
+    }
+
+    public void deleteAllLists() {
+        mRepository.deleteAllLists();
     }
 }

@@ -13,8 +13,9 @@ class AdapterNotifyMessage {
 
         UPDATE_LIST,
         DELETE_LIST,
-        INSERT_LIST
-    }
+        INSERT_LIST,
+        VIEW_LIST,
+    };
 
     public AdapterNotifyMessage(Object item, ChangeType changeType) {
         mPayload = item;

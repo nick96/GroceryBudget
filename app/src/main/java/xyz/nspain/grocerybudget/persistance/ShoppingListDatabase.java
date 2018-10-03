@@ -65,7 +65,6 @@ public abstract class ShoppingListDatabase extends RoomDatabase {
             ShoppingList list = new ShoppingList(0,"Shopping List", true);
             List<Long> ids = mShoppingListDao.insert(list);
             Long listId = ids.get(0);
-            Log.d(TAG, "Inserting items in list with id " + listId);
             mItemDao.insert(
                     new Item(0, "Bread", new BigDecimal("3.00"), false, listId),
                     new Item(0, "Milk", new BigDecimal("1.00"), false, listId),
@@ -90,9 +89,6 @@ public abstract class ShoppingListDatabase extends RoomDatabase {
             if (mShoppingListDao.isEmpty() && mItemDao.isEmpty()) {
                 Log.d(TAG, "Db is empty, inserting dummy data");
                 new PopulateDbAsync(mDb).execute();
-            } else {
-                Log.d(TAG, "Db is not empty, lists: " + mShoppingListDao.getLists().toString() +
-                            "items: " + mItemDao.getItems().toString());
             }
             return null;
         }
