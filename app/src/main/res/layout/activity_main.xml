@@ -71,7 +71,7 @@
 
 
                     <EditText
-                        android:id="@+id/totalCost"
+                        android:id="@+id/total_cost"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
@@ -87,6 +87,7 @@
                         android:textSize="36sp"
                         android:textStyle="bold"
                         android:typeface="sans" />
+
 
                 </android.support.v4.widget.NestedScrollView>
             </android.support.design.widget.CoordinatorLayout>
